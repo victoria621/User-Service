@@ -1,3 +1,67 @@
 spring:
-  application:
-    name: userService
+  # Настройки подключения к базе данных
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:user_service}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:password}
+    driver-class-name: org.postgresql.Driver
+
+  # Настройки JPA/Hibernate
+  jpa:
+    hibernate:
+      ddl-auto: validate  # validate - проверяет что схема БД соответствует сущностям (liquibase управляет схемой)
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        show_sql: false  # true - показывать SQL в консоли (для отладки)
+        jdbc:
+          batch_size: 20
+    open-in-view: false  # рекомендуется отключать для production
+
+  # Настройки Liquibase
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    default-schema: public
+    drop-first: false  # НЕ УСТАНАВЛИВАТЬ В TRUE НА PRODUCTION!
+
+  # Настройки для обработки дат
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    time-zone: UTC
+
+# Логирование
+logging:
+  level:
+    com.innowise.userService: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    liquibase: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+# Настройки приложения
+server:
+  port: ${SERVER_PORT:8080}
+  error:
+    include-message: always
+    include-binding-errors: always
+
+# Настройки для будущего подключения к другим БД (MongoDB, Redis - пока закомментированы)
+# mongodb:
+#   host: ${MONGO_HOST:localhost}
+#   port: ${MONGO_PORT:27017}
+#   database: ${MONGO_DB:user_service}
+#   username: ${MONGO_USERNAME:}
+#   password: ${MONGO_PASSWORD:}
+
+# redis:
+#   host: ${REDIS_HOST:localhost}
+#   port: ${REDIS_PORT:6379}
+#   password: ${REDIS_PASSWORD:}
+#   timeout: 2000ms
+
+# kafka:
+#   bootstrap-servers: ${KAFKA_HOST:localhost}:${KAFKA_PORT:9092}
