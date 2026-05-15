@@ -1,0 +1,105 @@
+# Compiled files
+*.class
+*.jar
+*.war
+*.ear
+target/
+out/
+build/
+
+### Maven ###
+.mvn/
+mvnw
+mvnw.cmd
+.mvn/wrapper/maven-wrapper.jar
+.mvn/wrapper/maven-wrapper.properties
+
+# Но исключаем примеры из документации
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### STS (Spring Tool Suite) ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea/
+*.iws
+*.iml
+*.ipr
+.idea_modules/
+.idea/**/workspace.xml
+.idea/**/tasks.xml
+.idea/**/usage.statistics.xml
+.idea/**/dictionaries
+.idea/**/shelf
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+*.code-workspace
+
+### Eclipse ###
+*.pydevproject
+.metadata/
+bin/
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.loadpath
+.remote-repositories
+
+### OS generated files ###
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+*.~
+
+### Logs ###
+*.log
+logs/
+*.log.gz
+
+### Temporary files ###
+*.temp
+*.cache
+*.lock
+
+### Test coverage ###
+. Jacoco
+.coveragerc
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+
+### Application specific ###
+application-local.properties
+application-dev.properties
+application-*.local.properties
+*.pid
+*.secret
+.env
+.env.local
