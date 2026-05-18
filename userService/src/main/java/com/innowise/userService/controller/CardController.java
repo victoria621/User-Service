@@ -2,6 +2,7 @@ package com.innowise.userService.controller;
 
 import com.innowise.userService.dto.CardRequestDTO;
 import com.innowise.userService.dto.CardResponseDTO;
+import com.innowise.userService.exception.ResourceNotFoundException;
 import com.innowise.userService.service.CardService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -26,48 +27,64 @@ public class CardController {
     }
 
     @PostMapping("/users/{userId}/cards")
-    public ResponseEntity<CardResponseDTO> createCard(@PathVariable Long userId, @Valid @RequestBody CardRequestDTO card) {
+    public ResponseEntity<CardResponseDTO> createCard(
+            @PathVariable Long userId,
+            @Valid @RequestBody CardRequestDTO card
+    ){
         log.info("createCard");
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(cardService.createCard(card,userId));
     }
 
     @GetMapping("/cards/{id}")
-    public ResponseEntity<CardResponseDTO> getCardById(@PathVariable Long id) {
+    public ResponseEntity<CardResponseDTO> getCardById(
+            @PathVariable Long id
+    ){
         log.info("getCardById");
         return ResponseEntity.status(HttpStatus.OK)
                 .body(cardService.getCardById(id));
     }
 
     @GetMapping("/users/{userId}/cards")
-    public ResponseEntity<List<CardResponseDTO>> getCardByUserId(@PathVariable Long userId) {
+    public ResponseEntity<List<CardResponseDTO>> getCardByUserId(
+            @PathVariable Long userId
+    ){
         log.info("getCardByUserId");
         return ResponseEntity.status(HttpStatus.OK)
                 .body(cardService.getCardsByUserId(userId));
     }
 
     @GetMapping("/cards")
-    public ResponseEntity<Page<CardResponseDTO>> getAllCards(Pageable pageable) {
+    public ResponseEntity<Page<CardResponseDTO>> getAllCards(
+            Pageable pageable
+    ) {
         log.info("getAllCards");
         return ResponseEntity.ok(cardService.getAllCards(pageable));
     }
 
     @PutMapping("/cards/{id}")
-    public ResponseEntity<CardResponseDTO> updateCard(@PathVariable Long id, @Valid @RequestBody CardRequestDTO card) {
+    public ResponseEntity<CardResponseDTO> updateCard(
+            @PathVariable Long id,
+            @Valid @RequestBody CardRequestDTO card
+    ){
         log.info("updateCard");
         return ResponseEntity.status(HttpStatus.OK)
                 .body(cardService.updateCard(id, card));
     }
 
     @PatchMapping("/cards/{id}/activate")
-    public ResponseEntity<Void> activateCard(@PathVariable("id") Long id) {
+    public ResponseEntity<Void> activateCard(
+            @PathVariable("id") Long id
+    ){
         log.info("Activate User");
         cardService.activateCard(id);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/cards/{id}/deactivate")
-    public ResponseEntity<Void> deactivateCard(@PathVariable("id") Long id) {
+    public ResponseEntity<Void> deactivateCard(
+            @PathVariable("id") Long id
+    ){
         log.info("Deactivate User");
         cardService.deactivateCard(id);
         return ResponseEntity.noContent().build();

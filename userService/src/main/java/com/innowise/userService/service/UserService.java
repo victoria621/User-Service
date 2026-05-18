@@ -3,6 +3,8 @@ package com.innowise.userService.service;
 import com.innowise.userService.dto.UserRequestDTO;
 import com.innowise.userService.dto.UserResponseDTO;
 import com.innowise.userService.entity.UserEntity;
+import com.innowise.userService.exception.BusinessException;
+import com.innowise.userService.exception.ResourceNotFoundException;
 import com.innowise.userService.mapper.UserMapper;
 import com.innowise.userService.repository.UserRepository;
 import com.innowise.userService.specification.UserSpecification;
@@ -29,7 +31,7 @@ public class UserService {
     public UserResponseDTO createUser(UserRequestDTO requestDTO) {
         UserEntity user = userMapper.toEntity(requestDTO);
         if(userRepository.existsByEmail(user.getEmail())){
-            throw new RuntimeException("Email already exists");
+            throw new BusinessException("Email already exists");
         }
         user.setActive(true);
 
@@ -40,7 +42,7 @@ public class UserService {
 
     public UserResponseDTO getUserById(Long id){
         UserEntity user = userRepository.findById(id).orElseThrow(
-                () -> new RuntimeException("User not found")
+                () -> new ResourceNotFoundException ("User not found")
         );
         return userMapper.toDto(user);
     }
@@ -55,13 +57,13 @@ public class UserService {
     }
 
     @Transactional
-    public UserResponseDTO updateUser(Long id, UserRequestDTO requestDTO){
+    public UserResponseDTO updateUser(Long id, UserRequestDTO requestDTO)  {
         UserEntity user = userRepository.findById(id).orElseThrow(
-                () -> new RuntimeException("User not found")
+                () -> new ResourceNotFoundException("User not found")
         );
         if (!user.getEmail().equals(requestDTO.email())) {
             if (userRepository.existsByEmail(requestDTO.email())) {
-                throw new RuntimeException("Email already exists");
+                throw new BusinessException("Email already exists");
             }
             user.setEmail(requestDTO.email());
         }
@@ -76,14 +78,14 @@ public class UserService {
     @Transactional
     public void activateUser(Long id) {
         UserEntity user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException ("User not found"));
         user.setActive(true);
     }
 
     @Transactional
     public void deactivateUser(Long id) {
         UserEntity user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException ("User not found"));
         user.setActive(false);
     }
 }

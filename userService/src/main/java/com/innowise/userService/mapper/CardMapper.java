@@ -5,7 +5,6 @@ import com.innowise.userService.dto.CardResponseDTO;
 import com.innowise.userService.entity.PaymentCardsEntity;
 import org.mapstruct.Mapper;
 
-import javax.smartcardio.Card;
 import java.util.List;
 
 @Mapper(componentModel = "spring")

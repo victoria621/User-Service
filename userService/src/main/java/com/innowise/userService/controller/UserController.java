@@ -2,19 +2,16 @@ package com.innowise.userService.controller;
 
 import com.innowise.userService.dto.UserRequestDTO;
 import com.innowise.userService.dto.UserResponseDTO;
+import com.innowise.userService.exception.ResourceNotFoundException;
 import com.innowise.userService.service.UserService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/users")
@@ -28,41 +25,56 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<UserResponseDTO> createUser(@RequestBody @Valid UserRequestDTO dto) {
+    public ResponseEntity<UserResponseDTO> createUser(
+            @RequestBody @Valid UserRequestDTO dto
+    ) {
         log.info("Create User");
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(userService.createUser(dto));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserResponseDTO> getUserById( @PathVariable("id") Long id) {
+    public ResponseEntity<UserResponseDTO> getUserById(
+            @PathVariable("id") Long id
+    ) {
         log.info("Get User");
         return ResponseEntity.status(HttpStatus.OK)
                 .body(userService.getUserById(id));
     }
 
     @GetMapping
-    public ResponseEntity<Page<UserResponseDTO>> getAllUsers(Pageable pageable, String name, String surname) {
+    public ResponseEntity<Page<UserResponseDTO>> getAllUsers(
+            Pageable pageable,
+            String name,
+            String surname
+    ) {
         log.info("Get All Users");
         return ResponseEntity.ok(userService.getAllUsers(pageable, name, surname));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UserResponseDTO> updateUser(@PathVariable("id") Long id, @RequestBody @Valid UserRequestDTO dto) {
+    public ResponseEntity<UserResponseDTO> updateUser(
+            @PathVariable("id") Long id,
+            @RequestBody @Valid UserRequestDTO dto
+    ){
         log.info("Update User");
         return ResponseEntity.status(HttpStatus.OK)
                 .body(userService.updateUser(id, dto));
     }
 
     @PatchMapping("/{id}/activate")
-    public ResponseEntity<Void> activateUser(@PathVariable("id") Long id) {
+    public ResponseEntity<Void> activateUser(
+            @PathVariable("id") Long id
+    ) {
         log.info("Activate User");
         userService.activateUser(id);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{id}/deactivate")
-    public ResponseEntity<Void> deactivateUser(@PathVariable("id") Long id) {
+    public ResponseEntity<Void> deactivateUser(
+            @PathVariable("id") Long id
+    ) {
         log.info("Deactivate User");
         userService.deactivateUser(id);
         return ResponseEntity.noContent().build();
