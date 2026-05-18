@@ -1,7 +1,10 @@
 package com.innowise.userService.service;
 
+import com.innowise.userService.dto.CardRequestDTO;
+import com.innowise.userService.dto.CardResponseDTO;
 import com.innowise.userService.entity.PaymentCardsEntity;
 import com.innowise.userService.entity.UserEntity;
+import com.innowise.userService.mapper.CardMapper;
 import com.innowise.userService.repository.PaymentCardRepository;
 import com.innowise.userService.repository.UserRepository;
 import org.springframework.data.domain.Page;
@@ -17,14 +20,17 @@ public class CardService {
 
     private final PaymentCardRepository paymentCardRepository;
     private final UserRepository userRepository;
+    private final CardMapper cardMapper;
 
-    public CardService(PaymentCardRepository paymentCardRepository, UserRepository userRepository) {
+    public CardService(PaymentCardRepository paymentCardRepository, UserRepository userRepository, CardMapper cardMapper) {
         this.paymentCardRepository = paymentCardRepository;
         this.userRepository = userRepository;
+        this.cardMapper = cardMapper;
     }
 
     @Transactional
-    public PaymentCardsEntity createCard(PaymentCardsEntity paymentCardsEntity, Long userId) {
+    public CardResponseDTO createCard(CardRequestDTO requestDTO, Long userId) {
+        PaymentCardsEntity paymentCardsEntity = cardMapper.toEntity(requestDTO);
         UserEntity userEntity =userRepository.findById(userId).orElseThrow(
                 () -> new RuntimeException("User with id " + userId + " not found"));
 
@@ -38,43 +44,51 @@ public class CardService {
 
         paymentCardsEntity.setUser(userEntity);
 
-        return paymentCardRepository.save(paymentCardsEntity);
+        PaymentCardsEntity paymentCardsEntity1 = paymentCardRepository.save(paymentCardsEntity);
+
+        return cardMapper.toDto(paymentCardsEntity1);
     }
 
-    public PaymentCardsEntity getCardById(Long id) {
-        return paymentCardRepository.findById(id).orElseThrow(
+    public CardResponseDTO getCardById(Long id) {
+        PaymentCardsEntity paymentCardsEntity = paymentCardRepository.findById(id).orElseThrow(
                 () -> new RuntimeException("Card with id " + id + " not found")
         );
+        return cardMapper.toDto(paymentCardsEntity);
     }
 
-    public List<PaymentCardsEntity> getCardsByUserId(Long userId){
+    public List<CardResponseDTO> getCardsByUserId(Long userId){
         List<PaymentCardsEntity> cards = paymentCardRepository.findByUserId(userId);
         if (cards.isEmpty()) {
             throw new RuntimeException("No cards found for user with id " + userId);
         }
-        return cards;
+        return cardMapper.toDtoList(cards);
 
     }
 
-    public Page<PaymentCardsEntity> getAllCards(Pageable pageable) {
-        return paymentCardRepository.findAll(pageable);
+    public Page<CardResponseDTO> getAllCards(Pageable pageable) {
+        Page<PaymentCardsEntity> cards = paymentCardRepository.findAll(pageable);
+        return cards.map(cardMapper::toDto);
 
     }
 
     @Transactional
-    public PaymentCardsEntity updateCard(Long id, PaymentCardsEntity paymentCardsEntity) {
-        PaymentCardsEntity paymentCardsEntity1 = paymentCardRepository.findById(id).orElseThrow(
+    public CardResponseDTO updateCard(Long id, CardRequestDTO requestDTO) {
+        PaymentCardsEntity paymentCardsEntity = paymentCardRepository.findById(id).orElseThrow(
                 () -> new RuntimeException("Card with id " + id + " not found")
         );
-        if (!paymentCardsEntity1.getNumber().equals(paymentCardsEntity.getNumber())) {
-            if (paymentCardRepository.existsByNumber(paymentCardsEntity.getNumber())) {
+
+        if (!paymentCardsEntity.getNumber().equals(requestDTO.number())) {
+            if (paymentCardRepository.existsByNumber(requestDTO.number())) {
                 throw new RuntimeException("Card number already exists");
             }
         }
-        paymentCardsEntity1.setNumber(paymentCardsEntity.getNumber());
-        paymentCardsEntity1.setHolder(paymentCardsEntity.getHolder());
-        paymentCardsEntity1.setExpirationDate(paymentCardsEntity.getExpirationDate());
-        return paymentCardRepository.save(paymentCardsEntity1);
+        paymentCardsEntity.setNumber(requestDTO.number());
+        paymentCardsEntity.setHolder(requestDTO.holder());
+        paymentCardsEntity.setExpirationDate(requestDTO.expirationDate());
+
+        PaymentCardsEntity paymentCardsEntity1 = paymentCardRepository.save(paymentCardsEntity);
+
+        return cardMapper.toDto(paymentCardsEntity1);
     }
 
     @Transactional

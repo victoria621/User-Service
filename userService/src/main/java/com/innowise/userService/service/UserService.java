@@ -1,6 +1,9 @@
 package com.innowise.userService.service;
 
+import com.innowise.userService.dto.UserRequestDTO;
+import com.innowise.userService.dto.UserResponseDTO;
 import com.innowise.userService.entity.UserEntity;
+import com.innowise.userService.mapper.UserMapper;
 import com.innowise.userService.repository.UserRepository;
 import com.innowise.userService.specification.UserSpecification;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,51 +17,60 @@ import org.springframework.stereotype.Service;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, UserMapper userMapper) {
+
         this.userRepository = userRepository;
+        this.userMapper = userMapper;
     }
 
     @Transactional
-    public UserEntity createUser(UserEntity user) {
+    public UserResponseDTO createUser(UserRequestDTO requestDTO) {
+        UserEntity user = userMapper.toEntity(requestDTO);
         if(userRepository.existsByEmail(user.getEmail())){
             throw new RuntimeException("Email already exists");
         }
         user.setActive(true);
 
+        UserEntity savedEntity = userRepository.save(user);
 
-        return userRepository.save(user);
+        return userMapper.toDto(savedEntity);
     }
 
-    public UserEntity getUserById(Long id){
-        return userRepository.findById(id).orElseThrow(
-                () -> new RuntimeException("User with id " + id + " not found")
+    public UserResponseDTO getUserById(Long id){
+        UserEntity user = userRepository.findById(id).orElseThrow(
+                () -> new RuntimeException("User not found")
         );
+        return userMapper.toDto(user);
     }
 
-    public Page<UserEntity> getAllUsers(Pageable pageable, String name, String surname){
+    public Page<UserResponseDTO> getAllUsers(Pageable pageable, String name, String surname){
         Specification<UserEntity> spec = Specification
                 .where(UserSpecification.hasName(name))
                 .and(UserSpecification.hasSurname(surname));
 
-        return userRepository.findAll(spec, pageable);
+        Page<UserEntity> user = userRepository.findAll(spec, pageable);
+        return user.map(userMapper::toDto);
     }
 
     @Transactional
-    public UserEntity updateUser(Long id, UserEntity user){
-        if(userRepository.existsByEmail(user.getEmail())){
-            throw new RuntimeException("Email already exists");
+    public UserResponseDTO updateUser(Long id, UserRequestDTO requestDTO){
+        UserEntity user = userRepository.findById(id).orElseThrow(
+                () -> new RuntimeException("User not found")
+        );
+        if (!user.getEmail().equals(requestDTO.email())) {
+            if (userRepository.existsByEmail(requestDTO.email())) {
+                throw new RuntimeException("Email already exists");
+            }
+            user.setEmail(requestDTO.email());
         }
 
-        UserEntity updatedUser = userRepository.findById(id).orElseThrow(
-                () -> new RuntimeException("User with id " + id + " not found")
-        );
-        updatedUser.setName(user.getName());
-        updatedUser.setSurname(user.getSurname());
-        updatedUser.setBirthDate(user.getBirthDate());
-        updatedUser.setEmail(user.getEmail());
+        user.setName(requestDTO.name());
+        user.setSurname(requestDTO.surname());
+        user.setBirthDate(requestDTO.birthDate());
 
-        return userRepository.save(updatedUser);
+        return userMapper.toDto(userRepository.save(user));
     }
 
     @Transactional
