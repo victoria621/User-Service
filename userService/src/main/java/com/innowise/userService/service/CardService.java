@@ -9,6 +9,8 @@ import com.innowise.userService.exception.ResourceNotFoundException;
 import com.innowise.userService.mapper.CardMapper;
 import com.innowise.userService.repository.PaymentCardRepository;
 import com.innowise.userService.repository.UserRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -50,6 +52,7 @@ public class CardService {
         return cardMapper.toDto(paymentCardsEntity1);
     }
 
+    @Cacheable(value = "cards", key = "#id")
     public CardResponseDTO getCardById(Long id)  {
         PaymentCardsEntity paymentCardsEntity = paymentCardRepository.findById(id).orElseThrow(
                 () -> new ResourceNotFoundException("Card with id " + id + " not found")
@@ -73,6 +76,7 @@ public class CardService {
     }
 
     @Transactional
+    @CacheEvict(value = "cards", key = "#id")
     public CardResponseDTO updateCard(Long id, CardRequestDTO requestDTO)  {
         PaymentCardsEntity paymentCardsEntity = paymentCardRepository.findById(id).orElseThrow(
                 () -> new ResourceNotFoundException("Card with id " + id + " not found")
@@ -93,6 +97,7 @@ public class CardService {
     }
 
     @Transactional
+    @CacheEvict(value = "cards", key = "#id")
     public void activateCard(Long id)  {
         PaymentCardsEntity card = paymentCardRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Card not found"));
@@ -100,6 +105,7 @@ public class CardService {
     }
 
     @Transactional
+    @CacheEvict(value = "cards", key = "#id")
     public void deactivateCard(Long id) {
         PaymentCardsEntity card = paymentCardRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Card not found"));
