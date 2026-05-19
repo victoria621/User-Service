@@ -22,6 +22,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private static final String USER_NOT_FOUND_MESSAGE = "Пользователь не найден";
 
     public UserService(UserRepository userRepository, UserMapper userMapper) {
 
@@ -45,7 +46,7 @@ public class UserService {
     @Cacheable(value = "users", key = "#id")
     public UserResponseDTO getUserById(Long id){
         UserEntity user = userRepository.findById(id).orElseThrow(
-                () -> new ResourceNotFoundException ("User not found")
+                () -> new ResourceNotFoundException (USER_NOT_FOUND_MESSAGE)
         );
         return userMapper.toDto(user);
     }
@@ -63,7 +64,7 @@ public class UserService {
     @CacheEvict(value = "users", key = "#id")
     public UserResponseDTO updateUser(Long id, UserRequestDTO requestDTO)  {
         UserEntity user = userRepository.findById(id).orElseThrow(
-                () -> new ResourceNotFoundException("User not found")
+                () -> new ResourceNotFoundException(USER_NOT_FOUND_MESSAGE)
         );
         if (!user.getEmail().equals(requestDTO.email())) {
             if (userRepository.existsByEmail(requestDTO.email())) {
@@ -83,7 +84,7 @@ public class UserService {
     @CacheEvict(value = "users", key = "#id")
     public void activateUser(Long id) {
         UserEntity user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException ("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException (USER_NOT_FOUND_MESSAGE));
         user.setActive(true);
     }
 
@@ -91,7 +92,7 @@ public class UserService {
     @CacheEvict(value = "users", key = "#id")
     public void deactivateUser(Long id) {
         UserEntity user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException ("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException (USER_NOT_FOUND_MESSAGE));
         user.setActive(false);
     }
 }
