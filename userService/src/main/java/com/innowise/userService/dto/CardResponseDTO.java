@@ -4,6 +4,7 @@ import jakarta.validation.constraints.*;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.format.annotation.NumberFormat;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -24,5 +25,5 @@ public record CardResponseDTO(
         LocalDateTime createdAt,
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
         LocalDateTime updatedAt
-        ) {
+        ) implements Serializable {
 }

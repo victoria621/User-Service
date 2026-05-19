@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Past;
 import org.springframework.format.annotation.DateTimeFormat;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 
 public record UserRequestDTO(
@@ -18,5 +19,5 @@ public record UserRequestDTO(
         @NotBlank(message = "Email is required")
         @Email(message = "Invalid email format")
         String email
-) {
+) implements Serializable {
 }

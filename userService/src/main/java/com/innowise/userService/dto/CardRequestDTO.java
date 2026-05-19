@@ -7,9 +7,10 @@ import jakarta.validation.constraints.Pattern;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.format.annotation.NumberFormat;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 
-public record CardRequestDTO(
+public record CardRequestDTO (
         @NotBlank(message = "Number is required")
         @Pattern(regexp = "\\d{16}")
         String number,
@@ -18,5 +19,5 @@ public record CardRequestDTO(
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
         @Future
         LocalDate expirationDate
-) {
+) implements Serializable {
 }
