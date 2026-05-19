@@ -22,7 +22,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
-    private static final String USER_NOT_FOUND_MESSAGE = "Пользователь не найден";
+    private static final String USER_NOT_FOUND_MESSAGE = "User not found";
 
     public UserService(UserRepository userRepository, UserMapper userMapper) {
 
