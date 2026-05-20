@@ -1,14 +1,93 @@
-spring:
-  datasource:
-      url: jdbc:postgresql://localhost:5432/user_service
-      username: postgres
-      password: password
-      driver-class-name: org.postgresql.Driver
+name: CI Pipeline
 
-  data:
-    redis:
-      host: localhost
-      port: 6379
+on:
+  push:
+    branches:
+      - main
+      - master
+      - develop
+      - tasks/USR-0
+      - tasks/USR-1
+  pull_request:
+    branches:
+      - main
+      - master
 
-testcontainers:
-  enabled: false
+jobs:
+  build-and-test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: user_service
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('userService/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Build with Maven
+        run: mvn clean compile -DskipTests
+        working-directory: ./userService
+
+      - name: Run Tests
+        run: mvn test
+        working-directory: ./userService
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/user_service
+          SPRING_DATASOURCE_USERNAME: postgres
+          SPRING_DATASOURCE_PASSWORD: password
+          SPRING_REDIS_HOST: localhost
+          SPRING_REDIS_PORT: 6379
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: ./userService/target/surefire-reports/
+
+      - name: Generate JaCoCo report
+        run: mvn jacoco:report
+        working-directory: ./userService
+
+      - name: SonarQube analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: mvn sonar:sonar -Dsonar.projectKey=victoria621_User-Service -Dsonar.organization=victoria621 -Dsonar.host.url=https://sonarcloud.io
+        working-directory: ./userService
