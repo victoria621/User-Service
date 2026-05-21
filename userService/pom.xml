@@ -23,6 +23,13 @@
         <sonar.projectKey>victoria621_User-Service</sonar.projectKey>
         <sonar.organization>victoria621</sonar.organization>
         <sonar.coverage.jacoco.xmlReportPaths>target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+        <sonar.coverage.exclusions>
+            **/dto/**/*.java,
+            **/entity/**/*.java,
+            **/exception/**/*.java,
+            **/config/**/*.java,
+            **/UserServiceApplication.java
+        </sonar.coverage.exclusions>
     </properties>
 
     <dependencies>
