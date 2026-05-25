@@ -89,7 +89,7 @@ public class CardService {
     }
 
     @Transactional
-    @CacheEvict(value = {"cards", "users"}, key = "#result.userId")
+    @CacheEvict(value = {"cards", "users"})
     public void deleteCard(Long id) {
         PaymentCardEntity card = cardDao.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Card not found"));
@@ -99,7 +99,7 @@ public class CardService {
         evictUserCache(userId);
     }
 
-    @CacheEvict(value = "users", key = "#userId")
+    @CacheEvict(value = {"cards", "users"})
     public void evictUserCache(Long userId) {
     }
 

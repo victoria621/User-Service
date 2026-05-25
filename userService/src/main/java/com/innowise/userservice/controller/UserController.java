@@ -12,6 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
@@ -42,13 +44,14 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<UserResponseDTO>> getAllUsers(
+    public ResponseEntity<List<UserResponseDTO>> getAllUsers(
             Pageable pageable,
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String surname
     ) {
         log.info("Get All Users");
-        return ResponseEntity.ok(userService.getAllUsers(pageable, name, surname));
+        Page<UserResponseDTO> page = userService.getAllUsers(pageable, name, surname);
+        return ResponseEntity.ok(page.getContent());
     }
 
     @PutMapping("/{id}")

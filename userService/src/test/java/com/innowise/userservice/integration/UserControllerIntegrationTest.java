@@ -134,7 +134,7 @@ class UserControllerIntegrationTest {
     }
 
     @Test
-    void getAllUsers_ShouldReturnEmptyPage_WhenNoMatch() {
+    void getAllUsers_ShouldReturnEmptyList_WhenNoMatch() {
         ResponseEntity<UserResponseDTO[]> response = restTemplate.getForEntity(
                 "/api/users?name=NonExistentName&page=0&size=10",
                 UserResponseDTO[].class
@@ -251,8 +251,31 @@ class UserControllerIntegrationTest {
     }
 
     @Test
+    void updateUser_ShouldReturnNotFound_WhenUserDoesNotExist() {
+        String uniqueEmail = generateUniqueEmail();
+        UserRequestDTO updateRequest = new UserRequestDTO("Jane", "Smith", null, uniqueEmail);
+
+        ResponseEntity<String> response = restTemplate.exchange(
+                "/api/users/99999",
+                HttpMethod.PUT,
+                new HttpEntity<>(updateRequest),
+                String.class
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody()).contains("User not found");
+    }
+
+    @Test
     void activateUser_ShouldSetActiveToTrue() {
         Long userId = createTestUser();
+
+        restTemplate.exchange(
+                "/api/users/" + userId + "/deactivate",
+                HttpMethod.PATCH,
+                null,
+                Void.class
+        );
 
         ResponseEntity<Void> response = restTemplate.exchange(
                 "/api/users/" + userId + "/activate",
@@ -266,6 +289,19 @@ class UserControllerIntegrationTest {
         ResponseEntity<UserResponseDTO> user = restTemplate.getForEntity("/api/users/" + userId, UserResponseDTO.class);
         assertThat(user.getBody()).isNotNull();
         assertThat(user.getBody().active()).isTrue();
+    }
+
+    @Test
+    void activateUser_ShouldReturnNotFound_WhenUserDoesNotExist() {
+        ResponseEntity<String> response = restTemplate.exchange(
+                "/api/users/99999/activate",
+                HttpMethod.PATCH,
+                null,
+                String.class
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody()).contains("User not found");
     }
 
     @Test
@@ -287,6 +323,19 @@ class UserControllerIntegrationTest {
     }
 
     @Test
+    void deactivateUser_ShouldReturnNotFound_WhenUserDoesNotExist() {
+        ResponseEntity<String> response = restTemplate.exchange(
+                "/api/users/99999/deactivate",
+                HttpMethod.PATCH,
+                null,
+                String.class
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody()).contains("User not found");
+    }
+
+    @Test
     void deleteUser_ShouldRemoveUser() {
         Long userId = createTestUser();
 
@@ -301,5 +350,18 @@ class UserControllerIntegrationTest {
 
         ResponseEntity<String> getResponse = restTemplate.getForEntity("/api/users/" + userId, String.class);
         assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    void deleteUser_ShouldReturnNotFound_WhenUserDoesNotExist() {
+        ResponseEntity<String> response = restTemplate.exchange(
+                "/api/users/99999",
+                HttpMethod.DELETE,
+                null,
+                String.class
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody()).contains("User not found");
     }
 }

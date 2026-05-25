@@ -107,6 +107,7 @@ class CardControllerIntegrationTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody()).hasSize(2);
     }
 
     @Test
@@ -154,6 +155,20 @@ class CardControllerIntegrationTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody()).hasSizeGreaterThanOrEqualTo(2);
+    }
+
+    @Test
+    void getCardsByUserId_ShouldReturnEmptyList_WhenUserHasNoCards() {
+        Long userId = createTestUser();
+
+        ResponseEntity<CardResponseDTO[]> response = restTemplate.getForEntity(
+                "/api/cards/users/" + userId,
+                CardResponseDTO[].class
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody()).isEmpty();
     }
 
     @Test
@@ -234,9 +249,31 @@ class CardControllerIntegrationTest {
     }
 
     @Test
+    void updateCard_ShouldReturnNotFound_WhenCardDoesNotExist() {
+        CardRequestDTO updateRequest = createValidCardRequest();
+
+        ResponseEntity<String> response = restTemplate.exchange(
+                "/api/cards/99999",
+                HttpMethod.PUT,
+                new HttpEntity<>(updateRequest),
+                String.class
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody()).contains("Card not found");
+    }
+
+    @Test
     void activateCard_ShouldSetActiveToTrue() {
         Long userId = createTestUser();
         Long cardId = createTestCard(userId);
+
+        restTemplate.exchange(
+                "/api/cards/" + cardId + "/deactivate",
+                HttpMethod.PATCH,
+                null,
+                Void.class
+        );
 
         ResponseEntity<Void> response = restTemplate.exchange(
                 "/api/cards/" + cardId + "/activate",
@@ -246,6 +283,19 @@ class CardControllerIntegrationTest {
         );
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+    }
+
+    @Test
+    void activateCard_ShouldReturnNotFound_WhenCardDoesNotExist() {
+        ResponseEntity<String> response = restTemplate.exchange(
+                "/api/cards/99999/activate",
+                HttpMethod.PATCH,
+                null,
+                String.class
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody()).contains("Card not found");
     }
 
     @Test
@@ -264,6 +314,19 @@ class CardControllerIntegrationTest {
     }
 
     @Test
+    void deactivateCard_ShouldReturnNotFound_WhenCardDoesNotExist() {
+        ResponseEntity<String> response = restTemplate.exchange(
+                "/api/cards/99999/deactivate",
+                HttpMethod.PATCH,
+                null,
+                String.class
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody()).contains("Card not found");
+    }
+
+    @Test
     void deleteCard_ShouldRemoveCard() {
         Long userId = createTestUser();
         Long cardId = createTestCard(userId);
@@ -276,5 +339,18 @@ class CardControllerIntegrationTest {
         );
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+    }
+
+    @Test
+    void deleteCard_ShouldReturnNotFound_WhenCardDoesNotExist() {
+        ResponseEntity<String> response = restTemplate.exchange(
+                "/api/cards/99999",
+                HttpMethod.DELETE,
+                null,
+                String.class
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody()).contains("Card not found");
     }
 }

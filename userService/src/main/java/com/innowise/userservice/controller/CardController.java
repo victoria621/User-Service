@@ -54,11 +54,12 @@ public class CardController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<CardResponseDTO>> getAllCards(
+    public ResponseEntity<List<CardResponseDTO>> getAllCards(
             Pageable pageable
     ) {
         log.info("getAllCards");
-        return ResponseEntity.ok(cardService.getAllCards(pageable));
+        Page<CardResponseDTO> page = cardService.getAllCards(pageable);
+        return ResponseEntity.ok(page.getContent());
     }
 
     @PutMapping("/{id}")
