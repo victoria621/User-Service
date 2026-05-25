@@ -1,14 +1,13 @@
 spring:
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:local}
-  # Настройки подключения к базе данных
+
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:user_service}
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:password}
     driver-class-name: org.postgresql.Driver
 
-  # Настройки JPA/Hibernate
   jpa:
     hibernate:
       ddl-auto: validate
@@ -21,23 +20,22 @@ spring:
           batch_size: 20
     open-in-view: false
 
-  # Настройки Liquibase
+
   liquibase:
     enabled: true
     change-log: classpath:db/changelog/db.changelog-master.yaml
     default-schema: public
     drop-first: false
 
-  # Настройки для обработки дат
+
   jackson:
     serialization:
       write-dates-as-timestamps: false
     time-zone: UTC
 
-  # Настройки кэширования Redis
+
   cache:
     type: redis
-
   data:
     redis:
       host: ${REDIS_HOST:localhost}
@@ -46,10 +44,10 @@ spring:
       timeout: 2000ms
       client-type: lettuce
 
-# Логирование
+
 logging:
   level:
-    com.innowise.userService: DEBUG
+    com.innowise.userservice: DEBUG
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
     liquibase: INFO
@@ -57,7 +55,7 @@ logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
 
-# Настройки приложения
+
 server:
   port: ${SERVER_PORT:8080}
   error:
