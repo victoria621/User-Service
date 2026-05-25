@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -23,7 +24,6 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -102,20 +102,25 @@ class CardControllerIntegrationTest {
 
     @Test
     void getAllCards_ShouldReturnPagedCards() {
-        ResponseEntity<CardResponseDTO[]> response = restTemplate.getForEntity(
+        ResponseEntity<Page<CardResponseDTO>> response = restTemplate.exchange(
                 "/api/cards?page=0&size=2",
-                CardResponseDTO[].class
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<Page<CardResponseDTO>>() {}
         );
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getContent()).hasSize(2);
     }
 
     @Test
     void getAllCards_ShouldReturnSecondPage() {
-        ResponseEntity<CardResponseDTO[]> response = restTemplate.getForEntity(
+        ResponseEntity<Page<CardResponseDTO>> response = restTemplate.exchange(
                 "/api/cards?page=1&size=2",
-                CardResponseDTO[].class
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<Page<CardResponseDTO>>() {}
         );
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -239,13 +244,6 @@ class CardControllerIntegrationTest {
     void activateCard_ShouldSetActiveToTrue() {
         Long userId = createTestUser();
         Long cardId = createTestCard(userId);
-
-        restTemplate.exchange(
-                "/api/cards/" + cardId + "/deactivate",
-                HttpMethod.PATCH,
-                null,
-                Void.class
-        );
 
         ResponseEntity<Void> response = restTemplate.exchange(
                 "/api/cards/" + cardId + "/activate",

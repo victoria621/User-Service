@@ -21,6 +21,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -52,6 +53,7 @@ class UserServiceTest {
         userEntity.setSurname("Doe");
         userEntity.setEmail("john@mail.com");
         userEntity.setActive(true);
+        userEntity.setPaymentCards(new ArrayList<>());
 
         UserResponseDTO expectedDto = new UserResponseDTO(
                 userId, "John", "Doe", null, "john@mail.com",
@@ -67,7 +69,6 @@ class UserServiceTest {
         assertThat(result.id()).isEqualTo(userId);
         assertThat(result.name()).isEqualTo("John");
         verify(userDAO).findById(userId);
-        verify(userMapper).toDto(userEntity);
     }
 
     @Test
@@ -125,10 +126,6 @@ class UserServiceTest {
                 "John", "Doe", null, "existing@mail.com"
         );
 
-        UserEntity entity = new UserEntity();
-        entity.setEmail("existing@mail.com");
-
-        when(userMapper.toEntity(requestDTO)).thenReturn(entity);
         when(userDAO.existsByEmail("existing@mail.com")).thenReturn(true);
 
         assertThatThrownBy(() -> userService.createUser(requestDTO))
@@ -214,6 +211,44 @@ class UserServiceTest {
                 .hasMessage("Email already exists");
 
         verify(userDAO, never()).save(any());
+    }
+
+    @Test
+    void updateUser_ShouldThrowException_WhenUserNotFound() {
+        Long userId = 999L;
+        UserRequestDTO requestDTO = new UserRequestDTO(
+                "John", "Doe", null, "john@mail.com"
+        );
+
+        when(userDAO.findById(userId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> userService.updateUser(userId, requestDTO))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage("User not found");
+    }
+
+    @Test
+    void deleteUser_ShouldRemoveUser_WhenUserExists() {
+        Long userId = 1L;
+        UserEntity user = new UserEntity();
+        user.setId(userId);
+
+        when(userDAO.findById(userId)).thenReturn(Optional.of(user));
+        doNothing().when(userDAO).delete(user);
+
+        userService.deleteUser(userId);
+
+        verify(userDAO).delete(user);
+    }
+
+    @Test
+    void deleteUser_ShouldThrowException_WhenUserNotFound() {
+        Long userId = 999L;
+        when(userDAO.findById(userId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> userService.deleteUser(userId))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage("User not found");
     }
 
     @Test

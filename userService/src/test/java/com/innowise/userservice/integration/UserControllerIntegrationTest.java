@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.context.annotation.Import;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpEntity;
@@ -29,7 +28,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers
-@Import(TestcontainersConfiguration.class)
 @Transactional
 class UserControllerIntegrationTest {
 
@@ -74,7 +72,8 @@ class UserControllerIntegrationTest {
     private void createTestUserWithName(String name, String surname) {
         String uniqueEmail = generateUniqueEmail();
         UserRequestDTO request = new UserRequestDTO(name, surname, null, uniqueEmail);
-        restTemplate.postForEntity("/api/users", request, UserResponseDTO.class);
+        ResponseEntity<UserResponseDTO> response = restTemplate.postForEntity("/api/users", request, UserResponseDTO.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
     }
 
     @BeforeEach
@@ -282,6 +281,7 @@ class UserControllerIntegrationTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
         ResponseEntity<UserResponseDTO> user = restTemplate.getForEntity("/api/users/" + userId, UserResponseDTO.class);
+        assertThat(user.getBody()).isNotNull();
         assertThat(user.getBody().active()).isTrue();
     }
 
@@ -299,6 +299,24 @@ class UserControllerIntegrationTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
         ResponseEntity<UserResponseDTO> user = restTemplate.getForEntity("/api/users/" + userId, UserResponseDTO.class);
+        assertThat(user.getBody()).isNotNull();
         assertThat(user.getBody().active()).isFalse();
+    }
+
+    @Test
+    void deleteUser_ShouldRemoveUser() {
+        Long userId = createTestUser();
+
+        ResponseEntity<Void> response = restTemplate.exchange(
+                "/api/users/" + userId,
+                HttpMethod.DELETE,
+                null,
+                Void.class
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+
+        ResponseEntity<String> getResponse = restTemplate.getForEntity("/api/users/" + userId, String.class);
+        assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 }

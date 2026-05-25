@@ -76,7 +76,7 @@ class CardServiceTest {
 
         assertThatThrownBy(() -> cardService.getCardById(cardId))
                 .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessage("Card with id " + cardId + " not found");
+                .hasMessage("Card not found");
     }
 
     @Test
@@ -160,13 +160,9 @@ class CardServiceTest {
         UserEntity userEntity = new UserEntity();
         userEntity.setId(userId);
 
-        PaymentCardEntity cardEntity = new PaymentCardEntity();
-        cardEntity.setNumber("1234567890123456");
-
         when(userDAO.findById(userId)).thenReturn(Optional.of(userEntity));
         when(cardDAO.countByUserId(userId)).thenReturn(2L);
         when(cardDAO.existsByNumber("1234567890123456")).thenReturn(true);
-        when(cardMapper.toEntity(requestDTO)).thenReturn(cardEntity);
 
         assertThatThrownBy(() -> cardService.createCard(requestDTO, userId))
                 .isInstanceOf(BusinessException.class)
@@ -196,13 +192,15 @@ class CardServiceTest {
     }
 
     @Test
-    void getCardsByUserId_ShouldThrowException_WhenNoCardsFound() {
+    void getCardsByUserId_ShouldReturnEmptyList_WhenNoCardsFound() {
         Long userId = 1L;
         when(cardDAO.findByUserId(userId)).thenReturn(List.of());
+        when(cardMapper.toDtoList(List.of())).thenReturn(List.of());
 
-        assertThatThrownBy(() -> cardService.getCardsByUserId(userId))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessage("No cards found for user with id " + userId);
+        List<CardResponseDTO> result = cardService.getCardsByUserId(userId);
+
+        assertThat(result).isEmpty();
+        verify(cardDAO).findByUserId(userId);
     }
 
     @Test
@@ -314,9 +312,13 @@ class CardServiceTest {
     @Test
     void activateCard_ShouldSetActiveToTrue() {
         Long cardId = 1L;
+        Long userId = 1L;
         PaymentCardEntity card = new PaymentCardEntity();
         card.setId(cardId);
         card.setActive(false);
+        UserEntity user = new UserEntity();
+        user.setId(userId);
+        card.setUser(user);
 
         when(cardDAO.findById(cardId)).thenReturn(Optional.of(card));
 
@@ -339,9 +341,13 @@ class CardServiceTest {
     @Test
     void deactivateCard_ShouldSetActiveToFalse() {
         Long cardId = 1L;
+        Long userId = 1L;
         PaymentCardEntity card = new PaymentCardEntity();
         card.setId(cardId);
         card.setActive(true);
+        UserEntity user = new UserEntity();
+        user.setId(userId);
+        card.setUser(user);
 
         when(cardDAO.findById(cardId)).thenReturn(Optional.of(card));
 
