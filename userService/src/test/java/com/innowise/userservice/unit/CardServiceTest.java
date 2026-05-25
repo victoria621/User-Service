@@ -147,7 +147,7 @@ class CardServiceTest {
 
         assertThatThrownBy(() -> cardService.createCard(requestDTO, userId))
                 .isInstanceOf(BusinessException.class)
-                .hasMessage("User already has 5 cards, cannot add more");
+                .hasMessage("User already has maximum number of cards");
     }
 
     @Test
@@ -308,7 +308,7 @@ class CardServiceTest {
 
         assertThatThrownBy(() -> cardService.updateCard(cardId, requestDTO))
                 .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessage("Card with id " + cardId + " not found");
+                .hasMessage("Card not found");
     }
 
     @Test
