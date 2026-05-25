@@ -23,5 +23,8 @@ public interface UserRepository extends JpaRepository<UserEntity, Long>, JpaSpec
     @Query(value = "SELECT * FROM users WHERE active = true", nativeQuery = true)
     List<UserEntity> findAllActiveUsersNative();
 
+    @Query("SELECT DISTINCT u FROM UserEntity u LEFT JOIN FETCH u.paymentCards WHERE u.id = :id")
+    Optional<UserEntity> findByIdWithCards(@Param("id") Long id);
+
     Page<UserEntity> findAll(Pageable pageable);
 }

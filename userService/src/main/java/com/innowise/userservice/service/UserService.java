@@ -1,7 +1,6 @@
 package com.innowise.userservice.service;
 
 import com.innowise.userservice.dao.UserDAO;
-import com.innowise.userservice.dto.CardResponseDTO;
 import com.innowise.userservice.dto.UserRequestDTO;
 import com.innowise.userservice.dto.UserResponseDTO;
 import com.innowise.userservice.entity.UserEntity;
@@ -9,7 +8,6 @@ import com.innowise.userservice.exception.BusinessException;
 import com.innowise.userservice.exception.ResourceNotFoundException;
 import com.innowise.userservice.mapper.CardMapper;
 import com.innowise.userservice.mapper.UserMapper;
-import com.innowise.userservice.repository.UserRepository;
 import com.innowise.userservice.specification.UserSpecification;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -18,9 +16,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-
-import java.util.Collections;
-import java.util.List;
 
 
 @Service
@@ -49,21 +44,19 @@ public class UserService {
 
     @Cacheable(value = "users", key = "#id")
     public UserResponseDTO getUserById(Long id) {
-        UserEntity user = userDAO.findById(id)
+        UserEntity user = userDAO.findByIdWithCards(id)
                 .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND_MESSAGE));
 
         UserResponseDTO dto = userMapper.toDto(user);
 
-        List<CardResponseDTO> cards = cardMapper.toDtoList(user.getPaymentCards());
-        if (cards == null) {
-            cards = Collections.emptyList();
+        if (user.getPaymentCards() != null && !user.getPaymentCards().isEmpty()) {
+            dto = new UserResponseDTO(
+                    dto.id(), dto.name(), dto.surname(), dto.birthDate(),
+                    dto.email(), dto.active(), dto.createdAt(), dto.updatedAt(),
+                    cardMapper.toDtoList(user.getPaymentCards())
+            );
         }
-
-        return new UserResponseDTO(
-                dto.id(), dto.name(), dto.surname(), dto.birthDate(),
-                dto.email(), dto.active(), dto.createdAt(), dto.updatedAt(),
-                cards
-        );
+        return dto;
     }
 
     public Page<UserResponseDTO> getAllUsers(Pageable pageable, String name, String surname) {
@@ -76,7 +69,7 @@ public class UserService {
     @Transactional
     @CacheEvict(value = "users", key = "#id")
     public UserResponseDTO updateUser(Long id, UserRequestDTO requestDTO)  {
-        UserEntity user = userDAO.findById(id).orElseThrow(
+        UserEntity user = userDAO.findByIdWithCards(id).orElseThrow(
                 () -> new ResourceNotFoundException(USER_NOT_FOUND_MESSAGE)
         );
 
@@ -95,7 +88,7 @@ public class UserService {
     @Transactional
     @CacheEvict(value = "users", key = "#id")
     public void deleteUser(Long id) {
-        UserEntity user = userDAO.findById(id)
+        UserEntity user = userDAO.findByIdWithCards(id)
                 .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND_MESSAGE));
         userDAO.delete(user);
     }
@@ -103,7 +96,7 @@ public class UserService {
     @Transactional
     @CacheEvict(value = "users", key = "#id")
     public void activateUser(Long id) {
-        UserEntity user = userDAO.findById(id)
+        UserEntity user = userDAO.findByIdWithCards(id)
                 .orElseThrow(() -> new ResourceNotFoundException (USER_NOT_FOUND_MESSAGE));
         user.setActive(true);
         userDAO.save(user);
@@ -112,7 +105,7 @@ public class UserService {
     @Transactional
     @CacheEvict(value = "users", key = "#id")
     public void deactivateUser(Long id) {
-        UserEntity user = userDAO.findById(id)
+        UserEntity user = userDAO.findByIdWithCards(id)
                 .orElseThrow(() -> new ResourceNotFoundException (USER_NOT_FOUND_MESSAGE));
         user.setActive(false);
         userDAO.save(user);

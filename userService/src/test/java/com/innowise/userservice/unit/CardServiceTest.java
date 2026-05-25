@@ -104,7 +104,7 @@ class CardServiceTest {
                 LocalDateTime.now(), LocalDateTime.now()
         );
 
-        when(userDAO.findById(userId)).thenReturn(Optional.of(userEntity));
+        when(userDAO.findByIdWithCards(userId)).thenReturn(Optional.of(userEntity));
         when(cardDAO.countByUserId(userId)).thenReturn(2L);
         when(cardDAO.existsByNumber("1234567890123456")).thenReturn(false);
         when(cardMapper.toEntity(requestDTO)).thenReturn(cardEntity);
@@ -125,7 +125,7 @@ class CardServiceTest {
                 "1234567890123456", "John Doe", LocalDate.of(2025, 12, 31)
         );
 
-        when(userDAO.findById(userId)).thenReturn(Optional.empty());
+        when(userDAO.findByIdWithCards(userId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> cardService.createCard(requestDTO, userId))
                 .isInstanceOf(ResourceNotFoundException.class)
@@ -142,7 +142,7 @@ class CardServiceTest {
         UserEntity userEntity = new UserEntity();
         userEntity.setId(userId);
 
-        when(userDAO.findById(userId)).thenReturn(Optional.of(userEntity));
+        when(userDAO.findByIdWithCards(userId)).thenReturn(Optional.of(userEntity));
         when(cardDAO.countByUserId(userId)).thenReturn(5L);
 
         assertThatThrownBy(() -> cardService.createCard(requestDTO, userId))
@@ -160,7 +160,7 @@ class CardServiceTest {
         UserEntity userEntity = new UserEntity();
         userEntity.setId(userId);
 
-        when(userDAO.findById(userId)).thenReturn(Optional.of(userEntity));
+        when(userDAO.findByIdWithCards(userId)).thenReturn(Optional.of(userEntity));
         when(cardDAO.countByUserId(userId)).thenReturn(2L);
         when(cardDAO.existsByNumber("1234567890123456")).thenReturn(true);
 

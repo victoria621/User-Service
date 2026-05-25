@@ -38,7 +38,7 @@ public class CardService {
     @Transactional
     @CacheEvict(value = "users", key = "#userId")
     public CardResponseDTO createCard(CardRequestDTO requestDTO, Long userId) {
-        UserEntity user = userDao.findById(userId)
+        UserEntity user = userDao.findByIdWithCards(userId)
                 .orElseThrow(() -> new ResourceNotFoundException(String.format(USER_NOT_FOUND, userId)));
 
         if (cardDao.countByUserId(userId) >= MAX_CARDS) {

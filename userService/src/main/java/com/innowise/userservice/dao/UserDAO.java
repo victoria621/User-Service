@@ -9,8 +9,9 @@ import java.util.Optional;
 
 public interface UserDAO {
     UserEntity save(UserEntity user);
-    Optional<UserEntity> findById(Long id);
+    Optional<UserEntity> findByIdWithCards(Long id);
     Page<UserEntity> findAll(Specification<UserEntity> spec, Pageable pageable);
     boolean existsByEmail(String email);
     void delete(UserEntity user);
+    Optional<UserEntity> findById(Long id);
 }
