@@ -1,6 +1,7 @@
 package com.innowise.userservice.service;
 
 import com.innowise.userservice.dao.UserDAO;
+import com.innowise.userservice.dto.CardResponseDTO;
 import com.innowise.userservice.dto.UserRequestDTO;
 import com.innowise.userservice.dto.UserResponseDTO;
 import com.innowise.userservice.entity.UserEntity;
@@ -17,6 +18,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+
+import java.util.Collections;
+import java.util.List;
 
 
 @Service
@@ -49,14 +53,17 @@ public class UserService {
                 .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND_MESSAGE));
 
         UserResponseDTO dto = userMapper.toDto(user);
-        if (user.getPaymentCards() != null) {
-            dto = new UserResponseDTO(
-                    dto.id(), dto.name(), dto.surname(), dto.birthDate(),
-                    dto.email(), dto.active(), dto.createdAt(), dto.updatedAt(),
-                    cardMapper.toDtoList(user.getPaymentCards())
-            );
+
+        List<CardResponseDTO> cards = cardMapper.toDtoList(user.getPaymentCards());
+        if (cards == null) {
+            cards = Collections.emptyList();
         }
-        return dto;
+
+        return new UserResponseDTO(
+                dto.id(), dto.name(), dto.surname(), dto.birthDate(),
+                dto.email(), dto.active(), dto.createdAt(), dto.updatedAt(),
+                cards
+        );
     }
 
     public Page<UserResponseDTO> getAllUsers(Pageable pageable, String name, String surname) {
