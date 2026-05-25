@@ -1,5 +1,7 @@
 package com.innowise.userservice.unit;
 
+import com.innowise.userservice.dao.CardDAO;
+import com.innowise.userservice.dao.UserDAO;
 import com.innowise.userservice.dto.CardRequestDTO;
 import com.innowise.userservice.dto.CardResponseDTO;
 import com.innowise.userservice.entity.PaymentCardEntity;
@@ -7,8 +9,6 @@ import com.innowise.userservice.entity.UserEntity;
 import com.innowise.userservice.exception.BusinessException;
 import com.innowise.userservice.exception.ResourceNotFoundException;
 import com.innowise.userservice.mapper.CardMapper;
-import com.innowise.userservice.repository.PaymentCardRepository;
-import com.innowise.userservice.repository.UserDAO;
 import com.innowise.userservice.service.CardService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,10 +33,10 @@ import static org.mockito.Mockito.*;
 class CardServiceTest {
 
     @Mock
-    private PaymentCardRepository cardRepository;
+    private CardDAO cardDAO;
 
     @Mock
-    private UserDAO userRepository;
+    private UserDAO userDAO;
 
     @Mock
     private CardMapper cardMapper;
@@ -58,7 +58,7 @@ class CardServiceTest {
                 LocalDateTime.now(), LocalDateTime.now()
         );
 
-        when(cardRepository.findById(cardId)).thenReturn(Optional.of(cardEntity));
+        when(cardDAO.findById(cardId)).thenReturn(Optional.of(cardEntity));
         when(cardMapper.toDto(cardEntity)).thenReturn(expectedDto);
 
         CardResponseDTO result = cardService.getCardById(cardId);
@@ -66,13 +66,13 @@ class CardServiceTest {
         assertThat(result).isNotNull();
         assertThat(result.id()).isEqualTo(cardId);
         assertThat(result.number()).isEqualTo("1234567890123456");
-        verify(cardRepository).findById(cardId);
+        verify(cardDAO).findById(cardId);
     }
 
     @Test
     void getCardById_ShouldThrowException_WhenCardNotFound() {
         Long cardId = 999L;
-        when(cardRepository.findById(cardId)).thenReturn(Optional.empty());
+        when(cardDAO.findById(cardId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> cardService.getCardById(cardId))
                 .isInstanceOf(ResourceNotFoundException.class)
@@ -104,18 +104,18 @@ class CardServiceTest {
                 LocalDateTime.now(), LocalDateTime.now()
         );
 
-        when(userRepository.findById(userId)).thenReturn(Optional.of(userEntity));
-        when(cardRepository.countByUserId(userId)).thenReturn(2L);
-        when(cardRepository.existsByNumber("1234567890123456")).thenReturn(false);
+        when(userDAO.findById(userId)).thenReturn(Optional.of(userEntity));
+        when(cardDAO.countByUserId(userId)).thenReturn(2L);
+        when(cardDAO.existsByNumber("1234567890123456")).thenReturn(false);
         when(cardMapper.toEntity(requestDTO)).thenReturn(cardEntity);
-        when(cardRepository.save(cardEntity)).thenReturn(savedCard);
+        when(cardDAO.save(cardEntity)).thenReturn(savedCard);
         when(cardMapper.toDto(savedCard)).thenReturn(expectedDto);
 
         CardResponseDTO result = cardService.createCard(requestDTO, userId);
 
         assertThat(result).isNotNull();
         assertThat(result.id()).isEqualTo(1L);
-        verify(cardRepository).save(cardEntity);
+        verify(cardDAO).save(cardEntity);
     }
 
     @Test
@@ -125,7 +125,7 @@ class CardServiceTest {
                 "1234567890123456", "John Doe", LocalDate.of(2025, 12, 31)
         );
 
-        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+        when(userDAO.findById(userId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> cardService.createCard(requestDTO, userId))
                 .isInstanceOf(ResourceNotFoundException.class)
@@ -142,8 +142,8 @@ class CardServiceTest {
         UserEntity userEntity = new UserEntity();
         userEntity.setId(userId);
 
-        when(userRepository.findById(userId)).thenReturn(Optional.of(userEntity));
-        when(cardRepository.countByUserId(userId)).thenReturn(5L);
+        when(userDAO.findById(userId)).thenReturn(Optional.of(userEntity));
+        when(cardDAO.countByUserId(userId)).thenReturn(5L);
 
         assertThatThrownBy(() -> cardService.createCard(requestDTO, userId))
                 .isInstanceOf(BusinessException.class)
@@ -163,9 +163,9 @@ class CardServiceTest {
         PaymentCardEntity cardEntity = new PaymentCardEntity();
         cardEntity.setNumber("1234567890123456");
 
-        when(userRepository.findById(userId)).thenReturn(Optional.of(userEntity));
-        when(cardRepository.countByUserId(userId)).thenReturn(2L);
-        when(cardRepository.existsByNumber("1234567890123456")).thenReturn(true);
+        when(userDAO.findById(userId)).thenReturn(Optional.of(userEntity));
+        when(cardDAO.countByUserId(userId)).thenReturn(2L);
+        when(cardDAO.existsByNumber("1234567890123456")).thenReturn(true);
         when(cardMapper.toEntity(requestDTO)).thenReturn(cardEntity);
 
         assertThatThrownBy(() -> cardService.createCard(requestDTO, userId))
@@ -186,19 +186,19 @@ class CardServiceTest {
         CardResponseDTO dto1 = new CardResponseDTO(1L, "1111", "John", null, true, userId, null, null);
         CardResponseDTO dto2 = new CardResponseDTO(2L, "2222", "John", null, true, userId, null, null);
 
-        when(cardRepository.findByUserId(userId)).thenReturn(cards);
+        when(cardDAO.findByUserId(userId)).thenReturn(cards);
         when(cardMapper.toDtoList(cards)).thenReturn(List.of(dto1, dto2));
 
         List<CardResponseDTO> result = cardService.getCardsByUserId(userId);
 
         assertThat(result).hasSize(2);
-        verify(cardRepository).findByUserId(userId);
+        verify(cardDAO).findByUserId(userId);
     }
 
     @Test
     void getCardsByUserId_ShouldThrowException_WhenNoCardsFound() {
         Long userId = 1L;
-        when(cardRepository.findByUserId(userId)).thenReturn(List.of());
+        when(cardDAO.findByUserId(userId)).thenReturn(List.of());
 
         assertThatThrownBy(() -> cardService.getCardsByUserId(userId))
                 .isInstanceOf(ResourceNotFoundException.class)
@@ -215,14 +215,14 @@ class CardServiceTest {
 
         CardResponseDTO dto = new CardResponseDTO(1L, "1111", "John", null, true, 1L, null, null);
 
-        when(cardRepository.findAll(pageable)).thenReturn(cardPage);
+        when(cardDAO.findAll(pageable)).thenReturn(cardPage);
         when(cardMapper.toDto(card)).thenReturn(dto);
 
         Page<CardResponseDTO> result = cardService.getAllCards(pageable);
 
         assertThat(result).isNotNull();
         assertThat(result.getContent()).hasSize(1);
-        verify(cardRepository).findAll(pageable);
+        verify(cardDAO).findAll(pageable);
     }
 
     @Test
@@ -247,14 +247,14 @@ class CardServiceTest {
                 LocalDate.of(2026, 12, 31), true, 1L, null, null
         );
 
-        when(cardRepository.findById(cardId)).thenReturn(Optional.of(existingCard));
-        when(cardRepository.save(existingCard)).thenReturn(savedCard);
+        when(cardDAO.findById(cardId)).thenReturn(Optional.of(existingCard));
+        when(cardDAO.save(existingCard)).thenReturn(savedCard);
         when(cardMapper.toDto(savedCard)).thenReturn(expectedDto);
 
         CardResponseDTO result = cardService.updateCard(cardId, requestDTO);
 
         assertThat(result.holder()).isEqualTo("Updated Holder");
-        verify(cardRepository, never()).existsByNumber(any());
+        verify(cardDAO, never()).existsByNumber(any());
     }
 
     @Test
@@ -268,14 +268,14 @@ class CardServiceTest {
         existingCard.setId(cardId);
         existingCard.setNumber("1234567890123456");
 
-        when(cardRepository.findById(cardId)).thenReturn(Optional.of(existingCard));
-        when(cardRepository.existsByNumber("9999999999999999")).thenReturn(false);
-        when(cardRepository.save(existingCard)).thenReturn(existingCard);
+        when(cardDAO.findById(cardId)).thenReturn(Optional.of(existingCard));
+        when(cardDAO.existsByNumber("9999999999999999")).thenReturn(false);
+        when(cardDAO.save(existingCard)).thenReturn(existingCard);
 
         cardService.updateCard(cardId, requestDTO);
 
         assertThat(existingCard.getNumber()).isEqualTo("9999999999999999");
-        verify(cardRepository).existsByNumber("9999999999999999");
+        verify(cardDAO).existsByNumber("9999999999999999");
     }
 
     @Test
@@ -289,8 +289,8 @@ class CardServiceTest {
         existingCard.setId(cardId);
         existingCard.setNumber("1234567890123456");
 
-        when(cardRepository.findById(cardId)).thenReturn(Optional.of(existingCard));
-        when(cardRepository.existsByNumber("9999999999999999")).thenReturn(true);
+        when(cardDAO.findById(cardId)).thenReturn(Optional.of(existingCard));
+        when(cardDAO.existsByNumber("9999999999999999")).thenReturn(true);
 
         assertThatThrownBy(() -> cardService.updateCard(cardId, requestDTO))
                 .isInstanceOf(BusinessException.class)
@@ -304,7 +304,7 @@ class CardServiceTest {
                 "1234567890123456", "John Doe", LocalDate.of(2026, 12, 31)
         );
 
-        when(cardRepository.findById(cardId)).thenReturn(Optional.empty());
+        when(cardDAO.findById(cardId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> cardService.updateCard(cardId, requestDTO))
                 .isInstanceOf(ResourceNotFoundException.class)
@@ -318,18 +318,18 @@ class CardServiceTest {
         card.setId(cardId);
         card.setActive(false);
 
-        when(cardRepository.findById(cardId)).thenReturn(Optional.of(card));
+        when(cardDAO.findById(cardId)).thenReturn(Optional.of(card));
 
         cardService.activateCard(cardId);
 
         assertThat(card.getActive()).isTrue();
-        verify(cardRepository).findById(cardId);
+        verify(cardDAO).findById(cardId);
     }
 
     @Test
     void activateCard_ShouldThrowException_WhenCardNotFound() {
         Long cardId = 999L;
-        when(cardRepository.findById(cardId)).thenReturn(Optional.empty());
+        when(cardDAO.findById(cardId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> cardService.activateCard(cardId))
                 .isInstanceOf(ResourceNotFoundException.class)
@@ -343,18 +343,18 @@ class CardServiceTest {
         card.setId(cardId);
         card.setActive(true);
 
-        when(cardRepository.findById(cardId)).thenReturn(Optional.of(card));
+        when(cardDAO.findById(cardId)).thenReturn(Optional.of(card));
 
         cardService.deactivateCard(cardId);
 
         assertThat(card.getActive()).isFalse();
-        verify(cardRepository).findById(cardId);
+        verify(cardDAO).findById(cardId);
     }
 
     @Test
     void deactivateCard_ShouldThrowException_WhenCardNotFound() {
         Long cardId = 999L;
-        when(cardRepository.findById(cardId)).thenReturn(Optional.empty());
+        when(cardDAO.findById(cardId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> cardService.deactivateCard(cardId))
                 .isInstanceOf(ResourceNotFoundException.class)

@@ -4,10 +4,13 @@ import com.innowise.userservice.entity.PaymentCardEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-public interface PaymentCardRepository extends JpaRepository<PaymentCardEntity,Long> {
+@Repository
+public interface PaymentCardRepository extends JpaRepository<PaymentCardEntity, Long> {
+
     List<PaymentCardEntity> findByUserId(Long userId);
 
     long countByUserId(Long userId);

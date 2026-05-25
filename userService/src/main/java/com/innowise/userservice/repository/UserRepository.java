@@ -11,9 +11,8 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
-public interface UserDAO extends JpaRepository<UserEntity, Long>, JpaSpecificationExecutor<UserEntity> {
+public interface UserRepository extends JpaRepository<UserEntity, Long>, JpaSpecificationExecutor<UserEntity> {
     Optional<UserEntity> findByEmail(String email);
-
     boolean existsByEmail(String email);
 
     @Query("SELECT u FROM UserEntity u WHERE u.name = :name AND u.surname = :surname")
@@ -23,5 +22,4 @@ public interface UserDAO extends JpaRepository<UserEntity, Long>, JpaSpecificati
     List<UserEntity> findAllActiveUsersNative();
 
     Page<UserEntity> findAll(Pageable pageable);
-
 }

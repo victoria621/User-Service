@@ -1,5 +1,6 @@
 package com.innowise.userservice.service;
 
+import com.innowise.userservice.dao.UserDAO;
 import com.innowise.userservice.dto.UserRequestDTO;
 import com.innowise.userservice.dto.UserResponseDTO;
 import com.innowise.userservice.entity.UserEntity;
@@ -7,7 +8,7 @@ import com.innowise.userservice.exception.BusinessException;
 import com.innowise.userservice.exception.ResourceNotFoundException;
 import com.innowise.userservice.mapper.CardMapper;
 import com.innowise.userservice.mapper.UserMapper;
-import com.innowise.userservice.repository.UserDAO;
+import com.innowise.userservice.repository.UserRepository;
 import com.innowise.userservice.specification.UserSpecification;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -21,30 +22,30 @@ import org.springframework.stereotype.Service;
 @Service
 public class UserService {
 
-    private final UserDAO userDao; // Вместо UserRepository
+    private final UserDAO userDAO;
     private final UserMapper userMapper;
     private final CardMapper cardMapper;
     private static final String USER_NOT_FOUND_MESSAGE = "User not found";
 
-    public UserService(UserDAO userDao, UserMapper userMapper, CardMapper cardMapper) {
-        this.userDao = userDao;
+    public UserService(UserDAO userDAO, UserMapper userMapper, CardMapper cardMapper) {
+        this.userDAO = userDAO;
         this.userMapper = userMapper;
         this.cardMapper = cardMapper;
     }
 
     @Transactional
     public UserResponseDTO createUser(UserRequestDTO requestDTO) {
-        if (userDao.existsByEmail(requestDTO.email())) {
+        if (userDAO.existsByEmail(requestDTO.email())) {
             throw new BusinessException("Email already exists");
         }
         UserEntity user = userMapper.toEntity(requestDTO);
         user.setActive(true);
-        return userMapper.toDto(userDao.save(user));
+        return userMapper.toDto(userDAO.save(user));
     }
 
     @Cacheable(value = "users", key = "#id")
     public UserResponseDTO getUserById(Long id) {
-        UserEntity user = userDao.findById(id)
+        UserEntity user = userDAO.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND_MESSAGE));
 
         UserResponseDTO dto = userMapper.toDto(user);
@@ -62,17 +63,17 @@ public class UserService {
         Specification<UserEntity> spec = Specification.where(UserSpecification.hasName(name))
                 .and(UserSpecification.hasSurname(surname));
 
-        return userDao.findAll(spec, pageable).map(userMapper::toDto);
+        return userDAO.findAll(spec, pageable).map(userMapper::toDto);
     }
 
     @Transactional
     @CacheEvict(value = "users", key = "#id")
     public UserResponseDTO updateUser(Long id, UserRequestDTO requestDTO)  {
-        UserEntity user = userDao.findById(id).orElseThrow(
+        UserEntity user = userDAO.findById(id).orElseThrow(
                 () -> new ResourceNotFoundException(USER_NOT_FOUND_MESSAGE)
         );
 
-        if (!user.getEmail().equals(requestDTO.email()) && userDao.existsByEmail(requestDTO.email())) {
+        if (!user.getEmail().equals(requestDTO.email()) && userDAO.existsByEmail(requestDTO.email())) {
             throw new BusinessException("Email already exists");
         }
 
@@ -81,21 +82,21 @@ public class UserService {
         user.setBirthDate(requestDTO.birthDate());
         user.setEmail(requestDTO.email());
 
-        return userMapper.toDto(userDao.save(user));
+        return userMapper.toDto(userDAO.save(user));
     }
 
     @Transactional
     @CacheEvict(value = "users", key = "#id")
     public void deleteUser(Long id) {
-        UserEntity user = userDao.findById(id)
+        UserEntity user = userDAO.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND_MESSAGE));
-        userDao.delete(user);
+        userDAO.delete(user);
     }
 
     @Transactional
     @CacheEvict(value = "users", key = "#id")
     public void activateUser(Long id) {
-        UserEntity user = userDao.findById(id)
+        UserEntity user = userDAO.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException (USER_NOT_FOUND_MESSAGE));
         user.setActive(true);
     }
@@ -103,7 +104,7 @@ public class UserService {
     @Transactional
     @CacheEvict(value = "users", key = "#id")
     public void deactivateUser(Long id) {
-        UserEntity user = userDao.findById(id)
+        UserEntity user = userDAO.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException (USER_NOT_FOUND_MESSAGE));
         user.setActive(false);
     }

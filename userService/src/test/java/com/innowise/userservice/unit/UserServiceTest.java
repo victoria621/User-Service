@@ -1,12 +1,13 @@
 package com.innowise.userservice.unit;
 
+import com.innowise.userservice.dao.UserDAO;
 import com.innowise.userservice.dto.UserRequestDTO;
 import com.innowise.userservice.dto.UserResponseDTO;
 import com.innowise.userservice.entity.UserEntity;
 import com.innowise.userservice.exception.BusinessException;
 import com.innowise.userservice.exception.ResourceNotFoundException;
+import com.innowise.userservice.mapper.CardMapper;
 import com.innowise.userservice.mapper.UserMapper;
-import com.innowise.userservice.repository.UserDAO;
 import com.innowise.userservice.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,10 +32,13 @@ import static org.mockito.Mockito.*;
 class UserServiceTest {
 
     @Mock
-    private UserDAO userRepository;
+    private UserDAO userDAO;
 
     @Mock
     private UserMapper userMapper;
+
+    @Mock
+    private CardMapper cardMapper;
 
     @InjectMocks
     private UserService userService;
@@ -54,7 +58,7 @@ class UserServiceTest {
                 true, LocalDateTime.now(), LocalDateTime.now(), null
         );
 
-        when(userRepository.findById(userId)).thenReturn(Optional.of(userEntity));
+        when(userDAO.findById(userId)).thenReturn(Optional.of(userEntity));
         when(userMapper.toDto(userEntity)).thenReturn(expectedDto);
 
         UserResponseDTO result = userService.getUserById(userId);
@@ -62,20 +66,20 @@ class UserServiceTest {
         assertThat(result).isNotNull();
         assertThat(result.id()).isEqualTo(userId);
         assertThat(result.name()).isEqualTo("John");
-        verify(userRepository).findById(userId);
+        verify(userDAO).findById(userId);
         verify(userMapper).toDto(userEntity);
     }
 
     @Test
     void getUserById_ShouldThrowException_WhenUserNotFound() {
         Long userId = 999L;
-        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+        when(userDAO.findById(userId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> userService.getUserById(userId))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("User not found");
 
-        verify(userRepository).findById(userId);
+        verify(userDAO).findById(userId);
         verify(userMapper, never()).toDto(any());
     }
 
@@ -103,8 +107,8 @@ class UserServiceTest {
         );
 
         when(userMapper.toEntity(requestDTO)).thenReturn(entityToSave);
-        when(userRepository.existsByEmail("john@mail.com")).thenReturn(false);
-        when(userRepository.save(entityToSave)).thenReturn(savedEntity);
+        when(userDAO.existsByEmail("john@mail.com")).thenReturn(false);
+        when(userDAO.save(entityToSave)).thenReturn(savedEntity);
         when(userMapper.toDto(savedEntity)).thenReturn(expectedDto);
 
         UserResponseDTO result = userService.createUser(requestDTO);
@@ -112,7 +116,7 @@ class UserServiceTest {
         assertThat(result).isNotNull();
         assertThat(result.id()).isEqualTo(1L);
         assertThat(result.active()).isTrue();
-        verify(userRepository).save(entityToSave);
+        verify(userDAO).save(entityToSave);
     }
 
     @Test
@@ -125,13 +129,13 @@ class UserServiceTest {
         entity.setEmail("existing@mail.com");
 
         when(userMapper.toEntity(requestDTO)).thenReturn(entity);
-        when(userRepository.existsByEmail("existing@mail.com")).thenReturn(true);
+        when(userDAO.existsByEmail("existing@mail.com")).thenReturn(true);
 
         assertThatThrownBy(() -> userService.createUser(requestDTO))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage("Email already exists");
 
-        verify(userRepository, never()).save(any());
+        verify(userDAO, never()).save(any());
     }
 
     @Test
@@ -158,15 +162,15 @@ class UserServiceTest {
                 true, LocalDateTime.now(), LocalDateTime.now(), null
         );
 
-        when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
-        when(userRepository.save(existingUser)).thenReturn(updatedUser);
+        when(userDAO.findById(userId)).thenReturn(Optional.of(existingUser));
+        when(userDAO.save(existingUser)).thenReturn(updatedUser);
         when(userMapper.toDto(updatedUser)).thenReturn(expectedDto);
 
         UserResponseDTO result = userService.updateUser(userId, requestDTO);
 
         assertThat(result.name()).isEqualTo("UpdatedName");
         assertThat(result.email()).isEqualTo("old@mail.com");
-        verify(userRepository, never()).existsByEmail(any());
+        verify(userDAO, never()).existsByEmail(any());
     }
 
     @Test
@@ -181,14 +185,14 @@ class UserServiceTest {
         existingUser.setName("John");
         existingUser.setEmail("old@mail.com");
 
-        when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
-        when(userRepository.existsByEmail("new@mail.com")).thenReturn(false);
-        when(userRepository.save(existingUser)).thenReturn(existingUser);
+        when(userDAO.findById(userId)).thenReturn(Optional.of(existingUser));
+        when(userDAO.existsByEmail("new@mail.com")).thenReturn(false);
+        when(userDAO.save(existingUser)).thenReturn(existingUser);
 
         userService.updateUser(userId, requestDTO);
 
         assertThat(existingUser.getEmail()).isEqualTo("new@mail.com");
-        verify(userRepository).existsByEmail("new@mail.com");
+        verify(userDAO).existsByEmail("new@mail.com");
     }
 
     @Test
@@ -202,14 +206,14 @@ class UserServiceTest {
         existingUser.setId(userId);
         existingUser.setEmail("old@mail.com");
 
-        when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
-        when(userRepository.existsByEmail("existing@mail.com")).thenReturn(true);
+        when(userDAO.findById(userId)).thenReturn(Optional.of(existingUser));
+        when(userDAO.existsByEmail("existing@mail.com")).thenReturn(true);
 
         assertThatThrownBy(() -> userService.updateUser(userId, requestDTO))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage("Email already exists");
 
-        verify(userRepository, never()).save(any());
+        verify(userDAO, never()).save(any());
     }
 
     @Test
@@ -219,18 +223,18 @@ class UserServiceTest {
         user.setId(userId);
         user.setActive(false);
 
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(userDAO.findById(userId)).thenReturn(Optional.of(user));
 
         userService.activateUser(userId);
 
         assertThat(user.getActive()).isTrue();
-        verify(userRepository).findById(userId);
+        verify(userDAO).findById(userId);
     }
 
     @Test
     void activateUser_ShouldThrowException_WhenUserNotFound() {
         Long userId = 999L;
-        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+        when(userDAO.findById(userId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> userService.activateUser(userId))
                 .isInstanceOf(ResourceNotFoundException.class)
@@ -244,18 +248,18 @@ class UserServiceTest {
         user.setId(userId);
         user.setActive(true);
 
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(userDAO.findById(userId)).thenReturn(Optional.of(user));
 
         userService.deactivateUser(userId);
 
         assertThat(user.getActive()).isFalse();
-        verify(userRepository).findById(userId);
+        verify(userDAO).findById(userId);
     }
 
     @Test
     void deactivateUser_ShouldThrowException_WhenUserNotFound() {
         Long userId = 999L;
-        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+        when(userDAO.findById(userId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> userService.deactivateUser(userId))
                 .isInstanceOf(ResourceNotFoundException.class)
@@ -280,7 +284,7 @@ class UserServiceTest {
                 true, LocalDateTime.now(), LocalDateTime.now(), null
         );
 
-        when(userRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(userPage);
+        when(userDAO.findAll(any(Specification.class), eq(pageable))).thenReturn(userPage);
         when(userMapper.toDto(user)).thenReturn(responseDto);
 
         Page<UserResponseDTO> result = userService.getAllUsers(pageable, name, surname);
@@ -288,6 +292,6 @@ class UserServiceTest {
         assertThat(result).isNotNull();
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0).name()).isEqualTo("John");
-        verify(userRepository).findAll(any(Specification.class), eq(pageable));
+        verify(userDAO).findAll(any(Specification.class), eq(pageable));
     }
 }
