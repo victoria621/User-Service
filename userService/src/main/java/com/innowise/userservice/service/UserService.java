@@ -99,6 +99,7 @@ public class UserService {
         UserEntity user = userDAO.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException (USER_NOT_FOUND_MESSAGE));
         user.setActive(true);
+        userDAO.save(user);
     }
 
     @Transactional
@@ -107,5 +108,6 @@ public class UserService {
         UserEntity user = userDAO.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException (USER_NOT_FOUND_MESSAGE));
         user.setActive(false);
+        userDAO.save(user);
     }
 }

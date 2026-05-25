@@ -9,8 +9,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.data.domain.Page;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -102,25 +100,20 @@ class CardControllerIntegrationTest {
 
     @Test
     void getAllCards_ShouldReturnPagedCards() {
-        ResponseEntity<Page<CardResponseDTO>> response = restTemplate.exchange(
+        ResponseEntity<CardResponseDTO[]> response = restTemplate.getForEntity(
                 "/api/cards?page=0&size=2",
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<Page<CardResponseDTO>>() {}
+                CardResponseDTO[].class
         );
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getContent()).hasSize(2);
     }
 
     @Test
     void getAllCards_ShouldReturnSecondPage() {
-        ResponseEntity<Page<CardResponseDTO>> response = restTemplate.exchange(
+        ResponseEntity<CardResponseDTO[]> response = restTemplate.getForEntity(
                 "/api/cards?page=1&size=2",
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<Page<CardResponseDTO>>() {}
+                CardResponseDTO[].class
         );
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);

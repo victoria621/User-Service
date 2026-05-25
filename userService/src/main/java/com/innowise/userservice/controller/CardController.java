@@ -89,7 +89,7 @@ public class CardController {
         return ResponseEntity.noContent().build();
     }
 
-    @DeleteMapping("/cards/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCard(@PathVariable Long id) {
         log.info("REST request to delete Card : {}", id);
         cardService.deleteCard(id);

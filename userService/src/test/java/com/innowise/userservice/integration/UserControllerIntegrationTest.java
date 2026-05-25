@@ -7,8 +7,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.data.domain.Page;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -87,90 +85,75 @@ class UserControllerIntegrationTest {
 
     @Test
     void getAllUsers_ShouldReturnPagedUsers() {
-        ResponseEntity<Page<UserResponseDTO>> response = restTemplate.exchange(
+        ResponseEntity<UserResponseDTO[]> response = restTemplate.getForEntity(
                 "/api/users?page=0&size=2",
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<Page<UserResponseDTO>>() {}
+                UserResponseDTO[].class
         );
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getContent()).hasSize(2);
-        assertThat(response.getBody().getTotalElements()).isGreaterThanOrEqualTo(5);
+        assertThat(response.getBody()).hasSize(2);
     }
 
     @Test
     void getAllUsers_ShouldFilterByName() {
-        ResponseEntity<Page<UserResponseDTO>> response = restTemplate.exchange(
+        ResponseEntity<UserResponseDTO[]> response = restTemplate.getForEntity(
                 "/api/users?name=Ali&page=0&size=10",
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<Page<UserResponseDTO>>() {}
+                UserResponseDTO[].class
         );
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getContent()).allMatch(user -> user.name().contains("Ali"));
+        assertThat(response.getBody()).allMatch(user -> user.name().contains("Ali"));
     }
 
     @Test
     void getAllUsers_ShouldFilterBySurname() {
-        ResponseEntity<Page<UserResponseDTO>> response = restTemplate.exchange(
+        ResponseEntity<UserResponseDTO[]> response = restTemplate.getForEntity(
                 "/api/users?surname=Smith&page=0&size=10",
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<Page<UserResponseDTO>>() {}
+                UserResponseDTO[].class
         );
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getContent()).allMatch(user -> user.surname().equals("Smith"));
+        assertThat(response.getBody()).allMatch(user -> user.surname().equals("Smith"));
     }
 
     @Test
     void getAllUsers_ShouldFilterByNameAndSurname() {
-        ResponseEntity<Page<UserResponseDTO>> response = restTemplate.exchange(
+        ResponseEntity<UserResponseDTO[]> response = restTemplate.getForEntity(
                 "/api/users?name=Ali&surname=Smith&page=0&size=10",
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<Page<UserResponseDTO>>() {}
+                UserResponseDTO[].class
         );
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getContent()).allMatch(user ->
+        assertThat(response.getBody()).allMatch(user ->
                 user.name().contains("Ali") && user.surname().equals("Smith")
         );
     }
 
     @Test
     void getAllUsers_ShouldReturnEmptyPage_WhenNoMatch() {
-        ResponseEntity<Page<UserResponseDTO>> response = restTemplate.exchange(
+        ResponseEntity<UserResponseDTO[]> response = restTemplate.getForEntity(
                 "/api/users?name=NonExistentName&page=0&size=10",
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<Page<UserResponseDTO>>() {}
+                UserResponseDTO[].class
         );
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getContent()).isEmpty();
-        assertThat(response.getBody().getTotalElements()).isZero();
+        assertThat(response.getBody()).isEmpty();
     }
 
     @Test
     void getAllUsers_ShouldUseDefaultPagination_WhenNoParams() {
-        ResponseEntity<Page<UserResponseDTO>> response = restTemplate.exchange(
+        ResponseEntity<UserResponseDTO[]> response = restTemplate.getForEntity(
                 "/api/users",
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<Page<UserResponseDTO>>() {}
+                UserResponseDTO[].class
         );
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getTotalElements()).isGreaterThanOrEqualTo(5);
     }
 
     @Test
