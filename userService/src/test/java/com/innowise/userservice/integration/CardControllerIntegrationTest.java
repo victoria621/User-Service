@@ -229,8 +229,14 @@ class CardControllerIntegrationTest {
     void updateCard_ShouldUpdateFields() {
         Long userId = createTestUser();
         Long cardId = createTestCard(userId);
+
+        String cardNumber = String.valueOf(1000000000000000L + ThreadLocalRandom.current().nextLong(9000000000000000L));
+        while (cardNumber.length() != 16) {
+            cardNumber = String.valueOf(1000000000000000L + ThreadLocalRandom.current().nextLong(9000000000000000L));
+        }
+
         CardRequestDTO updateRequest = new CardRequestDTO(
-                String.valueOf(2000000000000000L + ThreadLocalRandom.current().nextLong(9000000000000000L)),
+                cardNumber,
                 "Updated Holder",
                 LocalDate.now().plusYears(4)
         );
