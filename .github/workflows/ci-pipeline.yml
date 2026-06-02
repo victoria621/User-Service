@@ -12,6 +12,10 @@ on:
     branches:
       - main
       - master
+    types:
+      - opened
+      - synchronize
+      - reopened
 
 jobs:
   build-and-test:
