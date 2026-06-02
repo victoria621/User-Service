@@ -16,5 +16,4 @@ public record CardRequestDTO (
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
         @Future
         LocalDate expirationDate
-) implements Serializable {
-}
+) implements Serializable { }
