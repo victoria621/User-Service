@@ -38,9 +38,6 @@ class UserServiceTest {
     @Mock
     private UserMapper userMapper;
 
-    @Mock
-    private CardMapper cardMapper;
-
     @InjectMocks
     private UserService userService;
 
@@ -159,7 +156,7 @@ class UserServiceTest {
                 true, LocalDateTime.now(), LocalDateTime.now(), null
         );
 
-        when(userDAO.findByIdWithCards(userId)).thenReturn(Optional.of(existingUser));  // ← исправлено
+        when(userDAO.findByIdWithCards(userId)).thenReturn(Optional.of(existingUser));
         when(userDAO.save(existingUser)).thenReturn(updatedUser);
         when(userMapper.toDto(updatedUser)).thenReturn(expectedDto);
 
@@ -182,7 +179,7 @@ class UserServiceTest {
         existingUser.setName("John");
         existingUser.setEmail("old@mail.com");
 
-        when(userDAO.findByIdWithCards(userId)).thenReturn(Optional.of(existingUser));  // ← исправлено
+        when(userDAO.findByIdWithCards(userId)).thenReturn(Optional.of(existingUser));
         when(userDAO.existsByEmail("new@mail.com")).thenReturn(false);
         when(userDAO.save(existingUser)).thenReturn(existingUser);
 
@@ -203,7 +200,7 @@ class UserServiceTest {
         existingUser.setId(userId);
         existingUser.setEmail("old@mail.com");
 
-        when(userDAO.findByIdWithCards(userId)).thenReturn(Optional.of(existingUser));  // ← исправлено
+        when(userDAO.findByIdWithCards(userId)).thenReturn(Optional.of(existingUser));
         when(userDAO.existsByEmail("existing@mail.com")).thenReturn(true);
 
         assertThatThrownBy(() -> userService.updateUser(userId, requestDTO))
@@ -220,7 +217,7 @@ class UserServiceTest {
                 "John", "Doe", null, "john@mail.com"
         );
 
-        when(userDAO.findByIdWithCards(userId)).thenReturn(Optional.empty());  // ← исправлено
+        when(userDAO.findByIdWithCards(userId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> userService.updateUser(userId, requestDTO))
                 .isInstanceOf(ResourceNotFoundException.class)
@@ -233,7 +230,7 @@ class UserServiceTest {
         UserEntity user = new UserEntity();
         user.setId(userId);
 
-        when(userDAO.findByIdWithCards(userId)).thenReturn(Optional.of(user));  // ← исправлено
+        when(userDAO.findByIdWithCards(userId)).thenReturn(Optional.of(user));
         doNothing().when(userDAO).delete(user);
 
         userService.deleteUser(userId);
@@ -244,7 +241,7 @@ class UserServiceTest {
     @Test
     void deleteUser_ShouldThrowException_WhenUserNotFound() {
         Long userId = 999L;
-        when(userDAO.findByIdWithCards(userId)).thenReturn(Optional.empty());  // ← исправлено
+        when(userDAO.findByIdWithCards(userId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> userService.deleteUser(userId))
                 .isInstanceOf(ResourceNotFoundException.class)
@@ -258,7 +255,7 @@ class UserServiceTest {
         user.setId(userId);
         user.setActive(false);
 
-        when(userDAO.findByIdWithCards(userId)).thenReturn(Optional.of(user));  // ← исправлено
+        when(userDAO.findByIdWithCards(userId)).thenReturn(Optional.of(user));
 
         userService.activateUser(userId);
 
@@ -269,7 +266,7 @@ class UserServiceTest {
     @Test
     void activateUser_ShouldThrowException_WhenUserNotFound() {
         Long userId = 999L;
-        when(userDAO.findByIdWithCards(userId)).thenReturn(Optional.empty());  // ← исправлено
+        when(userDAO.findByIdWithCards(userId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> userService.activateUser(userId))
                 .isInstanceOf(ResourceNotFoundException.class)
@@ -283,7 +280,7 @@ class UserServiceTest {
         user.setId(userId);
         user.setActive(true);
 
-        when(userDAO.findByIdWithCards(userId)).thenReturn(Optional.of(user));  // ← исправлено
+        when(userDAO.findByIdWithCards(userId)).thenReturn(Optional.of(user));
 
         userService.deactivateUser(userId);
 
@@ -294,7 +291,7 @@ class UserServiceTest {
     @Test
     void deactivateUser_ShouldThrowException_WhenUserNotFound() {
         Long userId = 999L;
-        when(userDAO.findByIdWithCards(userId)).thenReturn(Optional.empty());  // ← исправлено
+        when(userDAO.findByIdWithCards(userId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> userService.deactivateUser(userId))
                 .isInstanceOf(ResourceNotFoundException.class)
